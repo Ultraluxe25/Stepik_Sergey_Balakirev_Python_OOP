@@ -1,1 +1,1 @@
-# Stepik_Sergey_Balakirev_Python_OOP
+# Stepik Sergey Balakirev Python OOP
