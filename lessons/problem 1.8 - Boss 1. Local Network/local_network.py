@@ -7,14 +7,14 @@ class Data:
 class Server:
     _server_number: int = 1
     
-    def __init__(self, buffer: list[Data] = []):
-        self.buffer = buffer
+    def __init__(self):
+        self.buffer: list[Data] = []
         self.ip = Server._server_number
         # IP для нового сервера
         Server._server_number += 1
         
     def send_data(self, data: Data) -> None:
-        self.buffer.append(data)
+        self.router.buffer.append(data)
     
     def get_data(self) -> list[Data]:
         package: list[Data] = self.buffer.copy()
@@ -28,22 +28,24 @@ class Server:
         
 class Router:
     """Класс для работы роутера с серверами и отправки данных"""
-    def __init__(self, servers: dict[Server] = {}, buffer: dict[Data] = {}):
-        # Серверы подключенные к роутеру
-        self.servers = servers
-        self.buffer = buffer 
+    def __init__(self, current_servers: dict[Server] = {}, buffer: list[Data] = []):
+        self.current_servers = current_servers
+        # Каждый буфер уже содержит адрес назначения IP
+        self.buffer = buffer
     
     def link(self, server: Server) -> None:
-        self.servers[server.ip] = server
-        self.buffer[server.ip] = server.buffer
+        server.router = self
+        self.current_servers[server.ip] = server
     
     def unlink(self, server: Server) -> None:
-        self.servers.pop(server.ip)
+        self.current_servers.pop(server.ip)
         
     def send_data(self) -> None:
-        for ip, server in self.servers.items():
-            server.buffer
-
+        for package in self.buffer:
+            if package.ip in self.current_servers:
+                self.current_servers[package.ip].buffer.append(package)
+        # Очищаем буффер после отправки всех сообщений
+        self.buffer.clear()
 
 
 router = Router()
