@@ -1,10 +1,12 @@
 class Data:
+    """Класс для хранения данных и отправки их на сервера."""
     def __init__(self, data: str, ip: int):
         self.data = data
         self.ip = ip
 
 
 class Server:
+    """Класс для работы сервера. Для получения данных и отправки их другим серверам через роутер."""
     _server_number: int = 1
     
     def __init__(self):
@@ -14,7 +16,9 @@ class Server:
         Server._server_number += 1
         
     def send_data(self, data: Data) -> None:
-        self.router.buffer.append(data)
+        # Данные можно отправить только если сервер подключен к роутеру
+        if self.router:
+            self.router.buffer.append(data)
     
     def get_data(self) -> list[Data]:
         package: list[Data] = self.buffer.copy()
@@ -27,18 +31,24 @@ class Server:
         
         
 class Router:
-    """Класс для работы роутера с серверами и отправки данных"""
-    def __init__(self, current_servers: dict[Server] = {}, buffer: list[Data] = []):
-        self.current_servers = current_servers
+    """Класс для работы роутера с серверами и отправки данных."""
+    def __init__(self):
+        # Для каждого роутера свои собственные атрибуты
+        self.current_servers: dict[Server] = {}
         # Каждый буфер уже содержит адрес назначения IP
-        self.buffer = buffer
+        self.buffer: list[Data] = []
     
     def link(self, server: Server) -> None:
+        # Подключаем роутер к серверу (сервер теперь имеет доступ к роутеру)
         server.router = self
+        # Подключаем сервер к роутеру
         self.current_servers[server.ip] = server
     
     def unlink(self, server: Server) -> None:
+        # Отключаем сервер от роутера
         self.current_servers.pop(server.ip)
+        # Отключаем доступ сервера к роутеру
+        server.router = None
         
     def send_data(self) -> None:
         for package in self.buffer:
